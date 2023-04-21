@@ -65,8 +65,7 @@ def handle_message(table, connection_id, event_body, apig_management_client):
         # 메시지 입력받아서 chatgpt에게 요청
         user_message = event_body["message"]
         messages.append({"role": "user", "content": user_message})
-        completion = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo", messages=messages)
+        completion = chat_completion(messages)
         # chatgpt 응답
         response = completion.choices[0].message.content
         # 클라이언트에게 응답 전송
@@ -81,6 +80,14 @@ def handle_message(table, connection_id, event_body, apig_management_client):
         messages.append({"role": "assistant", "content": response})
         add_messages(table, connection_id, messages)
 
+        # 성공적으로 클라이언트에게 응답이 가지 않았다면 재전송
+        while send_response['ResponseMetadata']['HTTPStatusCode'] == 200 and 'retry-after' in \
+                send_response['ResponseMetadata']['HTTPHeaders']:
+            time.sleep(int(send_response['ResponseMetadata']['HTTPHeaders']['retry-after']))
+            send_response = apig_management_client.post_to_connection(
+                Data=response, ConnectionId=connection_id
+            )
+
     except ClientError:
         logger.exception("Couldn't find prompt messages.")
         status_code = 500
@@ -94,6 +101,10 @@ def get_messages(table, connection_id):
 
 def add_messages(table, connection_id, messages):
     table.put_item(Item={'connection_id': connection_id, 'messages': messages})
+
+def chat_completion(messages):
+    return openai.ChatCompletion.create(
+        model="gpt-3.5-turbo", messages=messages)
 
 def handle_connect(table, connection_id):
     status_code = 200

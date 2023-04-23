@@ -6,7 +6,7 @@
 | 분류 | 개발환경                                                   | 
 |---|--------------------------------------------------------|
 | 운영체제 | Mac OS, Linux                                          |
-| 개발도구 | Pycharm, Postman,               |
+| 개발도구 | Pycharm, Postman               |
 | 데이터베이스 | AWS DynamoDB                                                  |
 | 버전 관리 | AWS Lambda, Github, Git                                            |
 | 배포 및 운영 | AWS Lambda, AWS API Gateway, AWS CloudWatch |
@@ -19,12 +19,36 @@
 - **AWS(Amazon Web Service)**
     - AWS Lambda
     - AWS API Gateway
-    - AWS Route 53, AWS Certificate Manager
     - AWS Cloudwatch
 
 ### 데이터베이스(Database)
 
 - **AWS DynamoDB**
+
+## Openai API
+
+### 사용 API
+
+chat completion API: [POST] https://api.openai.com/v1/chat/completions
+- Model: gpt-3.5-turbo
+- temperature: 1.0(default)
+- top_p: 1.0(default)
+
+```python
+openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=messages)
+```
+
+temperature를 0.7~1.3 사이의 값을 주어 좀 더 나은 답변이 생성될까 테스트 해보았지만 0.7과 가까울수록 너무 기계와 같은 딱딱한 답변이 나왔고, 1.3에 가까울수록 너무 특정 상황에 구체적인 답변이 나왔다. 이에 따라서 1.0이 가장 적합하다고 생각하여 1.0을 채택하였다.
+
+[테스트 기록](https://surf-healer-e38.notion.site/opeai-api-test-834c49038d49427790591fabc61be546)
+
+### 시작 프롬프트
+
+서비스에 맞추어 구체적으로 사용자에게 물어보게끔 유도하여 정확한 답변을 이끌어내었다.
+
+**[Default prompt]**
+
+You are a kind helpful assistant that helps to write some texts. You will ask the user to answer some questions in korean 1. Who are you? 2. Who are you writing to? 3. What kind of texts do you write? 4.specific context or essential information to write the text in a given order after user answers to each question.
 
 ## 인프라 구조
 
@@ -48,6 +72,7 @@ Websocket URL: wss://{domain}/{stage}
 - stage 종류
   - dev
   - prod
+  - test
 
 ### DB 구성 - NOSQL(Document)
 
